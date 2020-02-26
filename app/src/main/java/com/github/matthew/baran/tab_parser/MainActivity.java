@@ -1,29 +1,25 @@
-package com.github.styx42.tab_parser;
+package com.github.matthew.baran.tab_parser;
 
 import android.Manifest;
 import android.animation.ObjectAnimator;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.method.MovementMethod;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.TextAppearanceSpan;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import com.github.matthew.baran.tab_parser.R;
 
 import java.io.BufferedReader;
 import java.io.File;

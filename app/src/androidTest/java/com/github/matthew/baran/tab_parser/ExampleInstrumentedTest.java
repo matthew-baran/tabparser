@@ -1,4 +1,4 @@
-package com.github.styx42.tab_parser;
+package com.github.matthew.baran.tab_parser;
 
 import android.content.Context;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("com.github.styx42.tab_parser", appContext.getPackageName());
+        assertEquals("com.github.matthew.baran.tab_parser", appContext.getPackageName());
     }
 }

@@ -1,4 +1,4 @@
-package com.github.styx42.tab_parser;
+package com.github.matthew.baran.tab_parser;
 
 import org.junit.Test;
 
