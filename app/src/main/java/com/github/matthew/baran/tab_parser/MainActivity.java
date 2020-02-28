@@ -2,6 +2,7 @@ package com.github.matthew.baran.tab_parser;
 
 import android.Manifest;
 import android.animation.ObjectAnimator;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.text.SpannableString;
@@ -9,17 +10,16 @@ import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.TextAppearanceSpan;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
-import android.view.View;
+import android.util.Log;
+import android.view.*;
 import android.view.animation.LinearInterpolator;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import com.github.matthew.baran.tab_parser.R;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -30,12 +30,16 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity
 {
-    private final int MY_PERMISSIONS_REQUEST_READ_STORAGE = 0;
-    private static final String LOGTAG = "Tab Parser";
+    private Toolbar mTopToolbar;
 
     private GestureDetector gesture_detector;
-    private boolean animation_cancelled = false;
     private ScrollAnimation scroll_animation;
+
+    private final int MY_PERMISSIONS_REQUEST_READ_STORAGE = 0;
+    private static final String LOG_NAME = "Tab Party";
+
+    private String filename;
+    private boolean animation_cancelled = false;
     private int animation_duration = 100000;
 
     @Override
@@ -44,15 +48,46 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED)
+        mTopToolbar = findViewById(R.id.my_toolbar);
+        setSupportActionBar(mTopToolbar);
+
+        filename = getIntent().getStringExtra(SongList.MSG_FILE);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                PackageManager.PERMISSION_DENIED)
         {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_READ_STORAGE);
-        } else
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_READ_STORAGE);
+        }
+        else
         {
             displayTab();
         }
 
         gesture_detector = new GestureDetector(this, new tabGestureListener());
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        int id = item.getItemId();
+
+        if (id == R.id.action_go_back)
+        {
+            Intent intent = new Intent(this, SongList.class);
+            startActivity(intent);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     public class ScrollAnimation
@@ -61,7 +96,7 @@ public class MainActivity extends AppCompatActivity
         private int duration;
         private ScrollView sv = findViewById(R.id.tab_scrollview);
         private int max_scroll = sv.getChildAt(0).getHeight() - sv.getHeight();
-        
+
         public ScrollAnimation(int duration)
         {
             this.duration = duration;
@@ -71,8 +106,8 @@ public class MainActivity extends AppCompatActivity
         public void updateAnimation()
         {
             animator = ObjectAnimator.ofInt(sv, "scrollY", sv.getScrollY(), max_scroll);
-            double scroll_ratio = (max_scroll - sv.getScrollY()) / (double)max_scroll;
-            animator.setDuration((long)(duration * scroll_ratio));
+            double scroll_ratio = (max_scroll - sv.getScrollY()) / (double) max_scroll;
+            animator.setDuration((long) (duration * scroll_ratio));
             animator.setInterpolator(new LinearInterpolator());
         }
 
@@ -90,7 +125,7 @@ public class MainActivity extends AppCompatActivity
     public void displayTab()
     {
         File sdcard = Environment.getExternalStorageDirectory();
-        File file = new File(sdcard, "Download/Peaceful Easy Feeling.txt");
+        File file = new File(sdcard, "Download/" + filename);
 
         SpannableStringBuilder text = new SpannableStringBuilder();
         TextView tv = findViewById(R.id.tab_textview);
@@ -125,7 +160,7 @@ public class MainActivity extends AppCompatActivity
     {
 
         Pattern pattern = Pattern.compile(
-                        "[\\s^][A-G][b#]?" +                 // A, Bb, C#
+                "[\\s^][A-G][b#]?" +                    // A, Bb, C#
                         "(min|m)?" +                    // Amin, Am
                         "\\d*" +                        // C5, B7
                         "(?i)(dim\\d*" +                // Adim,  Gdim9
@@ -133,17 +168,19 @@ public class MainActivity extends AppCompatActivity
                         "|sus\\d*" +                    // Dsus, Dsus4
                         "|aug\\d*|\\+" +                // Eaug, E+, Eaug9
                         "|(M|maj)\\d*)?" +              // Cmaj, Cmaj7
-                        "([b#]\\d+)?[\\s$]");                // Cmaj7b9, AmSus2#7
+                        "([b#]\\d+)?[\\s$]");           // Cmaj7b9, AmSus2#7
 
         Matcher string_matcher = pattern.matcher(span_str.toString());
 
         if (string_matcher.find())
         {
-            span_str.setSpan(new TextAppearanceSpan(this, R.style.Chords), 0, span_str.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            span_str.setSpan(new TextAppearanceSpan(this, R.style.Chords), 0, span_str.length(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         else
         {
-            span_str.setSpan(new TextAppearanceSpan(this, R.style.Lyrics), 0, span_str.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            span_str.setSpan(new TextAppearanceSpan(this, R.style.Lyrics), 0, span_str.length(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 
         return span_str;
@@ -157,12 +194,14 @@ public class MainActivity extends AppCompatActivity
         switch (request_code)
         {
             case MY_PERMISSIONS_REQUEST_READ_STORAGE:
-                if (grant_results.length > 0 && grant_results[0] == PackageManager.PERMISSION_GRANTED)
+                if (grant_results.length > 0 &&
+                        grant_results[0] == PackageManager.PERMISSION_GRANTED)
                 {
                     displayTab();
-                } else
+                }
+                else
                 {
-                    TextView tv = (TextView) findViewById(R.id.tab_textview);
+                    TextView tv = findViewById(R.id.tab_textview);
                     tv.setText("Permission Denied!");
                 }
                 return;
@@ -184,7 +223,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public boolean onDown(MotionEvent event)
         {
-            if (scroll_animation==null)
+            if (scroll_animation == null)
             {
                 scroll_animation = new ScrollAnimation(animation_duration);
             }
