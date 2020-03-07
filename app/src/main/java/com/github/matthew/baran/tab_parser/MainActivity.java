@@ -158,28 +158,29 @@ public class MainActivity extends AppCompatActivity
 
     public SpannableString formatTabString(SpannableString span_str)
     {
+        span_str.setSpan(new TextAppearanceSpan(this, R.style.Lyrics), 0, span_str.length(),
+                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         Pattern pattern = Pattern.compile(
-                "[\\s^][A-G][b#]?" +                    // A, Bb, C#
-                        "(min|m)?" +                    // Amin, Am
-                        "\\d*" +                        // C5, B7
-                        "(?i)(dim\\d*" +                // Adim,  Gdim9
-                        "|add\\d+" +                    // Cadd9,  B7add6
-                        "|sus\\d*" +                    // Dsus, Dsus4
-                        "|aug\\d*|\\+" +                // Eaug, E+, Eaug9
-                        "|(M|maj)\\d*)?" +              // Cmaj, Cmaj7
-                        "([b#]\\d+)?[\\s$]");           // Cmaj7b9, AmSus2#7
+                "(?<=^|\\s)" +
+                "[A-G][b#]?" +                  // A, Bb, C#
+                "(min|m)?" +                    // Amin, Am
+                "\\d*" +                        // C5, B7
+                "(?i)(dim\\d*" +                // Adim,  Gdim9
+                "|add\\d+" +                    // Cadd9,  B7add6
+                "|sus\\d*" +                    // Dsus, Dsus4
+                "|aug|\\+" +                    // Eaug, E+
+                "|(M|maj)\\d*)?" +              // Cmaj, Cmaj7
+                "([b#]\\d+)?" +                 // Cmaj7b9, AmSus2#7
+                "(?=([:;,./\\\\]|\\s|$))");
 
         Matcher string_matcher = pattern.matcher(span_str.toString());
 
-        if (string_matcher.find())
+        while (string_matcher.find())
         {
-            span_str.setSpan(new TextAppearanceSpan(this, R.style.Chords), 0, span_str.length(),
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-        else
-        {
-            span_str.setSpan(new TextAppearanceSpan(this, R.style.Lyrics), 0, span_str.length(),
+            span_str.setSpan(new TextAppearanceSpan(this, R.style.Chords),
+                    string_matcher.start(),
+                    string_matcher.end(),
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 
