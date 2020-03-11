@@ -176,11 +176,23 @@ public class MainActivity extends AppCompatActivity
 
         Matcher string_matcher = pattern.matcher(span_str.toString());
 
+        int num_tokens = span_str.toString().split("\\s+").length;
+        int num_chords = 0;
+
         while (string_matcher.find())
         {
             span_str.setSpan(new TextAppearanceSpan(this, R.style.Chords),
                     string_matcher.start(),
                     string_matcher.end(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            num_chords++;
+        }
+
+        // Try to eliminate chord style for capitalized lyrics "A", "Am", etc...
+        if (num_tokens-num_chords > 2)
+        {
+            span_str.setSpan(new TextAppearanceSpan(this, R.style.Lyrics),
+                    0, span_str.length(),
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 
