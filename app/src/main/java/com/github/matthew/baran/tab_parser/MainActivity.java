@@ -172,7 +172,8 @@ public class MainActivity extends AppCompatActivity
                 "|aug|\\+" +                    // Eaug, E+
                 "|(M|maj)\\d*)?" +              // Cmaj, Cmaj7
                 "([b#]\\d+)?" +                 // Cmaj7b9, AmSus2#7
-                "(?=([:;,./\\\\]|\\s|$))");
+                "([/\\\\][A-G])?" +             // C/E, G7\A
+                "(?=([:;,.]|\\s|$))");
 
         Matcher string_matcher = pattern.matcher(span_str.toString());
 
@@ -193,6 +194,17 @@ public class MainActivity extends AppCompatActivity
         {
             span_str.setSpan(new TextAppearanceSpan(this, R.style.Lyrics),
                     0, span_str.length(),
+                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+
+        pattern = Pattern.compile("(?i)(Chorus|(\\w* )?Verse( \\w*)?|Bridge|Intro|Outro|Interlude" +
+                "|(Pre-*)?chorus)");
+        string_matcher = pattern.matcher(span_str.toString());
+        if (string_matcher.find())
+        {
+            span_str.setSpan(new TextAppearanceSpan(this, R.style.Anchors),
+                    string_matcher.start(),
+                    string_matcher.end(),
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 

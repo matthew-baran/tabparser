@@ -20,6 +20,12 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <style name="Anchors">
+        <item name="android:textSize">12pt</item>
+        <item name="android:textColor">@color/colorAnchors</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
     <style name="Toolbar">
         <item name="android:background">@color/toolBarBackground</item>
     </style>

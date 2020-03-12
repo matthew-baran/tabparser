@@ -5,6 +5,7 @@
     <color name="colorAccent">#D81B60</color>
     <color name="colorChords">#4287f5</color>
     <color name="colorLyrics">#000000</color>
+    <color name="colorAnchors">#49C720</color>
     <color name="iconBackground">#C3D1DE</color>
     <color name="toolBarBackground">#C3D1DE</color>
 </resources>
