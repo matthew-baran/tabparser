@@ -5,11 +5,7 @@ import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Environment;
-import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.method.ScrollingMovementMethod;
-import android.text.style.TextAppearanceSpan;
 import android.util.Log;
 import android.view.*;
 import android.view.animation.LinearInterpolator;
@@ -21,12 +17,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -127,93 +118,17 @@ public class MainActivity extends AppCompatActivity
         File sdcard = Environment.getExternalStorageDirectory();
         File file = new File(sdcard, "Download/" + filename);
 
-        SpannableStringBuilder text = new SpannableStringBuilder();
+        FormattedTab tab = new FormattedTab(this, file);
         TextView tv = findViewById(R.id.tab_textview);
 
-        try
-        {
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            String line;
-
-            while ((line = br.readLine()) != null)
-            {
-                SpannableString span_str = new SpannableString(line);
-
-                span_str = formatTabString(span_str);
-
-                text.append(span_str);
-                text.append('\n');
-            }
-            br.close();
-        } catch (IOException e)
-        {
-            tv.setText(e.getMessage());
-            return;
-        }
-
-        tv.setText(text);
+        tv.setText(tab.getFormattedText());
         tv.setMovementMethod(new ScrollingMovementMethod());
         tv.setOnTouchListener(new tabTouchListener());
     }
 
-    public SpannableString formatTabString(SpannableString span_str)
-    {
-        span_str.setSpan(new TextAppearanceSpan(this, R.style.Lyrics), 0, span_str.length(),
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        Pattern pattern = Pattern.compile(
-                "(?<=^|\\s)" +
-                "[A-G][b#]?" +                  // A, Bb, C#
-                "(min|m)?" +                    // Amin, Am
-                "\\d*" +                        // C5, B7
-                "(?i)(dim\\d*" +                // Adim,  Gdim9
-                "|add\\d+" +                    // Cadd9,  B7add6
-                "|sus\\d*" +                    // Dsus, Dsus4
-                "|aug|\\+" +                    // Eaug, E+
-                "|(M|maj)\\d*)?" +              // Cmaj, Cmaj7
-                "([b#]\\d+)?" +                 // Cmaj7b9, AmSus2#7
-                "([/\\\\][A-G])?" +             // C/E, G7\A
-                "(?=([:;,.]|\\s|$))");
-
-        Matcher string_matcher = pattern.matcher(span_str.toString());
-
-        int num_tokens = span_str.toString().split("\\s+").length;
-        int num_chords = 0;
-
-        while (string_matcher.find())
-        {
-            span_str.setSpan(new TextAppearanceSpan(this, R.style.Chords),
-                    string_matcher.start(),
-                    string_matcher.end(),
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            num_chords++;
-        }
-
-        // Try to eliminate chord style for capitalized lyrics "A", "Am", etc...
-        if (num_tokens-num_chords > 2)
-        {
-            span_str.setSpan(new TextAppearanceSpan(this, R.style.Lyrics),
-                    0, span_str.length(),
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-        pattern = Pattern.compile("(?i)(Chorus|(\\w* )?Verse( \\w*)?|Bridge|Intro|Outro|Interlude" +
-                "|(Pre-*)?chorus)");
-        string_matcher = pattern.matcher(span_str.toString());
-        if (string_matcher.find())
-        {
-            span_str.setSpan(new TextAppearanceSpan(this, R.style.Anchors),
-                    string_matcher.start(),
-                    string_matcher.end(),
-                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-        return span_str;
-    }
-
     @Override
-    public void onRequestPermissionsResult(int request_code,
-                                           String[] permissions, int[] grant_results)
+    public void onRequestPermissionsResult(int request_code, String[] permissions,
+                                           int[] grant_results)
     {
         super.onRequestPermissionsResult(request_code, permissions, grant_results);
         switch (request_code)
