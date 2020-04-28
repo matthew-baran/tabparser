@@ -21,9 +21,10 @@ class FormattedTab
 {
     private AppCompatActivity context = null;
 
+    private ArrayList<String> lines = new ArrayList<>();
     private String artist = "Unknown Artist";
     private String title = "Unknown Title";
-    private ArrayList<String> lines = new ArrayList<>();
+    private Integer artist_title_idx = -1;
     private ArrayList<String> chorus = new ArrayList<>();
     private ArrayList<Integer> chorus_idx = new ArrayList<>();
     private Integer chord_count;
@@ -100,10 +101,12 @@ class FormattedTab
 
     private void findArtistAndTitle()
     {
-        Iterator it = lines.iterator();
+        Iterator<String> it = lines.iterator();
+        int ctr = 0;
+
         while(it.hasNext())
         {
-            String str = it.next().toString();
+            String str = it.next();
             if (containsAnchor(str) || containsChords(str))
             {
                 return;
@@ -117,6 +120,7 @@ class FormattedTab
 
                     artist = cleanString(parsed[0]);
                     title = cleanString(parsed[1]);
+                    artist_title_idx = ctr;
                     return;
                 }
                 else
@@ -125,7 +129,8 @@ class FormattedTab
                     artist = cleanString(str);
                     while (it.hasNext())
                     {
-                        str = it.next().toString();
+                        ++ctr;
+                        str = it.next();
                         if (!str.isEmpty())
                         {
                             if (containsAnchor(str) || containsChords(str))
@@ -135,12 +140,14 @@ class FormattedTab
                             else
                             {
                                 title = cleanString(str);
+                                artist_title_idx = ctr;
                             }
                             return;
                         }
                     }
                 }
             }
+            ++ctr;
         }
     }
 
@@ -154,20 +161,20 @@ class FormattedTab
             return str;
         }
 
-        String[] split = str.split("\\s+");
+        String[] tokens = str.split("\\s+");
         str = "";
-        for (String s : split)
+        for (String t : tokens)
         {
-            if (s.isEmpty())
+            if (t.isEmpty())
             {
                 continue;
             }
-            if (s.length()==1)
+            if (t.length()==1)
             {
-                str += str.toUpperCase() + " ";
+                str += t.toUpperCase() + " ";
                 continue;
             }
-            str += s.substring(0, 1).toUpperCase() + s.substring(1) + " ";
+            str += t.substring(0, 1).toUpperCase() + t.substring(1) + " ";
         }
         str = str.substring(0, str.length()-1);
         return str;
@@ -177,9 +184,18 @@ class FormattedTab
     {
         formatted_text = new SpannableStringBuilder();
         int ctr = 0;
+        boolean is_front_matter = true;
+
+        // Start with some whitespace so the content has time to scroll past.
+        formatted_text.append("\n\n\n");
 
         for (String line : lines)
         {
+            if ((isBlank(line) && is_front_matter) || ctr <= artist_title_idx)
+            {
+                ++ctr;
+                continue;
+            }
             if (!chorus_idx.isEmpty() && ctr == chorus_idx.get(0))
             {
                 formatted_text.append(formatChorus());
@@ -190,6 +206,7 @@ class FormattedTab
                 formatted_text.append(formatLine(line));
                 formatted_text.append('\n');
             }
+            is_front_matter = false;
             ++ctr;
         }
     }
