@@ -4,6 +4,7 @@ import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.TextAppearanceSpan;
+import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.BufferedReader;
@@ -11,6 +12,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,8 +21,8 @@ class FormattedTab
 {
     private AppCompatActivity context = null;
 
-    private String artist;
-    private String title;
+    private String artist = "Unknown Artist";
+    private String title = "Unknown Title";
     private ArrayList<String> lines = new ArrayList<>();
     private ArrayList<String> chorus = new ArrayList<>();
     private ArrayList<Integer> chorus_idx = new ArrayList<>();
@@ -40,16 +43,16 @@ class FormattedTab
                     "|aug|\\+" +                    // Eaug, E+
                     "|(M|maj)\\d*)?" +              // Cmaj, Cmaj7
                     "([b#]\\d+)?" +                 // Cmaj7b9, AmSus2#7
-                    "([/\\\\][A-G])?" +             // C/E, G7\A
+                    "([/\\\\][A-G][b#]?)?" +         // C/E, G7\A, D/F#
                     "(?=([:;,.]|\\s|$))");
 
     private final Pattern anchor_pattern = Pattern.compile(
                     "(?i)(Chorus" +
-                    "|(\\w* )?Verse( \\w*)" + "?" +
+                    "|(\\w*\\s*)?Verse\\s*\\w*" +
                     "|Bridge|Intro|Outro|Interlude" +
-                    "|(Pre-*)?chorus)");
+                    "|Capo\\s*(I+|\\d+)|(Pre-)?chorus)(\\s|$)");
 
-    private final Pattern chorus_pattern = Pattern.compile("(?i)Chorus");
+    private final Pattern chorus_pattern = Pattern.compile("(?i)Chorus(\\s|$)");
     private final Pattern blank_pattern = Pattern.compile("^\\s*$");
     // @formatter:on
 
@@ -74,6 +77,7 @@ class FormattedTab
             return;
         }
 
+        findArtistAndTitle();
         findChorusLines();
         findChorusLocations();
         formatTab();
@@ -82,6 +86,91 @@ class FormattedTab
     SpannableStringBuilder getFormattedText()
     {
         return formatted_text;
+    }
+
+    String getTitle()
+    {
+        return title;
+    }
+
+    String getArtist()
+    {
+        return artist;
+    }
+
+    private void findArtistAndTitle()
+    {
+        Iterator it = lines.iterator();
+        while(it.hasNext())
+        {
+            String str = it.next().toString();
+            if (containsAnchor(str) || containsChords(str))
+            {
+                return;
+            }
+            if (!str.isEmpty())
+            {
+                // Recover artist/title from "artist - title" structure
+                if (str.contains("-") && str.indexOf('-') == str.lastIndexOf('-'))
+                {
+                    String[] parsed = str.split("\\s*-\\s*");
+
+                    artist = cleanString(parsed[0]);
+                    title = cleanString(parsed[1]);
+                    return;
+                }
+                else
+                {
+                    // Try to recover artist/title from consecutive lines
+                    artist = cleanString(str);
+                    while (it.hasNext())
+                    {
+                        str = it.next().toString();
+                        if (!str.isEmpty())
+                        {
+                            if (containsAnchor(str) || containsChords(str))
+                            {
+                                artist = "Unknown Artist";
+                            }
+                            else
+                            {
+                                title = cleanString(str);
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private String cleanString(String str)
+    {
+        // Trim whitespace and force capitalization of first letters only
+        str = str.toLowerCase().trim();
+
+        if (str.isEmpty())
+        {
+            return str;
+        }
+
+        String[] split = str.split("\\s+");
+        str = "";
+        for (String s : split)
+        {
+            if (s.isEmpty())
+            {
+                continue;
+            }
+            if (s.length()==1)
+            {
+                str += str.toUpperCase() + " ";
+                continue;
+            }
+            str += s.substring(0, 1).toUpperCase() + s.substring(1) + " ";
+        }
+        str = str.substring(0, str.length()-1);
+        return str;
     }
 
     private void formatTab()
@@ -130,10 +219,10 @@ class FormattedTab
                     Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 
-//        string_matcher = pattern.matcher(span_str.toString());
+//        string_matcher = anchor_pattern.matcher(span_str.toString());
 //        if (string_matcher.find())
 //        {
-//            span_str.setSpan(new TextAppearanceSpan(this, R.style.Anchors),
+//            span_str.setSpan(new TextAppearanceSpan(context, R.style.Anchors),
 //                    string_matcher.start(),
 //                    string_matcher.end(),
 //                    Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);

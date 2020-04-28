@@ -119,8 +119,10 @@ public class MainActivity extends AppCompatActivity
         File file = new File(sdcard, "Download/" + filename);
 
         FormattedTab tab = new FormattedTab(this, file);
-        TextView tv = findViewById(R.id.tab_textview);
 
+        getSupportActionBar().setTitle(tab.getArtist() + " - " + tab.getTitle());
+
+        TextView tv = findViewById(R.id.tab_textview);
         tv.setText(tab.getFormattedText());
         tv.setMovementMethod(new ScrollingMovementMethod());
         tv.setOnTouchListener(new tabTouchListener());
