@@ -51,9 +51,9 @@ class FormattedTab
                     "(?i)(Chorus" +
                     "|(\\w*\\s*)?Verse\\s*\\w*" +
                     "|Bridge|Intro|Outro|Interlude" +
-                    "|Capo\\s*(I+|\\d+)|(Pre-)?chorus)(\\s|$)");
+                    "|Capo\\s*(I+|\\d+)|(Pre-)?chorus)(?=([:;,.]|\\s|$))");
 
-    private final Pattern chorus_pattern = Pattern.compile("(?i)Chorus(\\s|$)");
+    private final Pattern chorus_pattern = Pattern.compile("(?i)Chorus(?=([:;,.]|\\s|$))");
     private final Pattern blank_pattern = Pattern.compile("^\\s*$");
     // @formatter:on
 
@@ -370,4 +370,11 @@ class FormattedTab
     {
         return blank_pattern.matcher(str).find();
     }
+
+    private boolean containsTablature(String str)
+    {
+        String[] tokens = str.split("-");
+        return tokens.length > 5;
+    }
+
 }
