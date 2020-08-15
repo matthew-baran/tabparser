@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity
 
     private String filename;
     private boolean animation_cancelled = false;
-    private int animation_duration = 100000;
+    private int animation_duration = 100;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -121,6 +121,7 @@ public class MainActivity extends AppCompatActivity
         FormattedTab tab = new FormattedTab(this, file);
 
         getSupportActionBar().setTitle(tab.getArtist() + " - " + tab.getTitle());
+        animation_duration = tab.getTabDuration();
 
         TextView tv = findViewById(R.id.tab_textview);
         tv.setText(tab.getFormattedText());
@@ -167,7 +168,7 @@ public class MainActivity extends AppCompatActivity
         {
             if (scroll_animation == null)
             {
-                scroll_animation = new ScrollAnimation(animation_duration);
+                scroll_animation = new ScrollAnimation(animation_duration * 1000);
             }
 
             if (scroll_animation.getAnimator().isRunning())

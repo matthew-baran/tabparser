@@ -27,7 +27,8 @@ class FormattedTab
     private Integer artist_title_idx = -1;
     private ArrayList<String> chorus = new ArrayList<>();
     private ArrayList<Integer> chorus_idx = new ArrayList<>();
-    private Integer chord_count;
+    private Integer tab_duration;
+    private double bpm = 150;
     private SpannableStringBuilder formatted_text;
 
     private boolean extra_blank = false;
@@ -99,12 +100,14 @@ class FormattedTab
         return artist;
     }
 
+    Integer getTabDuration() { return tab_duration; }
+
     private void findArtistAndTitle()
     {
         Iterator<String> it = lines.iterator();
         int ctr = 0;
 
-        while(it.hasNext())
+        while (it.hasNext())
         {
             String str = it.next();
             if (containsAnchor(str) || containsChords(str))
@@ -169,14 +172,14 @@ class FormattedTab
             {
                 continue;
             }
-            if (t.length()==1)
+            if (t.length() == 1)
             {
                 str += t.toUpperCase() + " ";
                 continue;
             }
             str += t.substring(0, 1).toUpperCase() + t.substring(1) + " ";
         }
-        str = str.substring(0, str.length()-1);
+        str = str.substring(0, str.length() - 1);
         return str;
     }
 
@@ -184,6 +187,10 @@ class FormattedTab
     {
         formatted_text = new SpannableStringBuilder();
         int ctr = 0;
+        int lines_out = 3;
+        int chord_line_cnt = 0;
+        int first_chord_line = -1;
+        int last_chord_line = -1;
         boolean is_front_matter = true;
 
         // Start with some whitespace so the content has time to scroll past.
@@ -191,7 +198,8 @@ class FormattedTab
 
         for (String line : lines)
         {
-            if ((isBlank(line) && is_front_matter) || ctr <= artist_title_idx)
+            if ((isBlank(line) && is_front_matter) || ctr <= artist_title_idx ||
+                    containsTablature(line))
             {
                 ++ctr;
                 continue;
@@ -200,14 +208,41 @@ class FormattedTab
             {
                 formatted_text.append(formatChorus());
                 chorus_idx.remove(0);
+                lines_out += chorus.size();
             }
             else
             {
                 formatted_text.append(formatLine(line));
                 formatted_text.append('\n');
+                ++lines_out;
             }
+
+            if (containsChords(line))
+            {
+                ++chord_line_cnt;
+                if (first_chord_line < 0)
+                {
+                    first_chord_line = ctr;
+                }
+                last_chord_line = ctr;
+            }
+
             is_front_matter = false;
             ++ctr;
+        }
+
+        // Lots of assumptions here... make scroll speed configurable
+        double beats_per_measure = 4;
+        double measures_per_line = 4;
+        double total_beats = beats_per_measure * measures_per_line * chord_line_cnt;
+        double song_duration = Math.round(60 * (total_beats / bpm));
+        if (last_chord_line > first_chord_line)
+        {
+            tab_duration = (int) (lines_out * song_duration / (last_chord_line - first_chord_line));
+        }
+        else
+        {
+            tab_duration = 100;
         }
     }
 
@@ -373,8 +408,14 @@ class FormattedTab
 
     private boolean containsTablature(String str)
     {
-        String[] tokens = str.split("-");
-        return tokens.length > 5;
+        Pattern tab_pattern = Pattern.compile("-");
+        Matcher tab_matcher = tab_pattern.matcher(str);
+        int dash_ctr = 0;
+        while (tab_matcher.find())
+        {
+            ++dash_ctr;
+        }
+        return dash_ctr > 5;
     }
 
 }
