@@ -6,14 +6,21 @@ import android.text.Spanned;
 import android.text.style.TextAppearanceSpan;
 import android.util.Log;
 import androidx.appcompat.app.AppCompatActivity;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.ListIterator;
+import javax.net.ssl.HttpsURLConnection;
+import java.io.*;
+import java.net.*;
+import java.nio.Buffer;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,7 +34,7 @@ class FormattedTab
     private Integer artist_title_idx = -1;
     private ArrayList<String> chorus = new ArrayList<>();
     private ArrayList<Integer> chorus_idx = new ArrayList<>();
-    private Integer tab_duration;
+    private Integer tab_duration = 150;
     private double bpm = 150;
     private SpannableStringBuilder formatted_text;
 
@@ -83,6 +90,7 @@ class FormattedTab
         findChorusLines();
         findChorusLocations();
         formatTab();
+        setDuration();
     }
 
     SpannableStringBuilder getFormattedText()
@@ -100,7 +108,10 @@ class FormattedTab
         return artist;
     }
 
-    Integer getTabDuration() { return tab_duration; }
+    Integer getTabDuration()
+    {
+        return tab_duration;
+    }
 
     private void findArtistAndTitle()
     {
@@ -418,4 +429,73 @@ class FormattedTab
         return dash_ctr > 5;
     }
 
+    private void setDuration()
+    {
+        if (artist.equals("Unknown Artist") || title.equals("Unknown Title")) {
+            return;
+        }
+
+        String artist_url = artist.replace(" ", "%20");
+        String title_url = title.replace(" ", "%20");
+        String url = "https://musicbrainz.org/ws/2/recording?query=" +
+                "recording:%22" + title_url + "%22%20AND%20" +
+                "artist:%22" + artist_url + "%22&limit=5&offset=0&fmt=json";
+        StringRequest request = new MusicBrainzSongDurationRequest(url);
+
+        RequestQueue request_queue = Volley.newRequestQueue(this.context);
+        request_queue.add(request);
+    }
+
+    private class MusicBrainzSongDurationRequest extends StringRequest {
+        MusicBrainzSongDurationRequest(String url) {
+            super(Request.Method.GET, url, new SongDurationRequestListener(),
+                    new SongDurationErrorListener());
+        }
+
+        @Override
+        public Map<String, String> getHeaders()
+        {
+            Map<String, String> headers = new HashMap<String, String>();
+            headers.put("User-agent", "TabParser/0.1 (matthewsbaran@gmail.com)");
+            return headers;
+        }
+    }
+
+    private class SongDurationRequestListener implements Response.Listener<String>
+    {
+        @Override
+        public void onResponse(String response) {
+            JSONArray recordings;
+            try {
+                JSONObject obj = new JSONObject(response);
+                recordings = obj.getJSONArray("recordings");
+            } catch (JSONException e) {
+                Log.d("tabparser", e.getMessage());
+                return;
+            }
+
+            Integer avg_duration = 0;
+            for (int i = 0; i < recordings.length(); i++) {
+                try {
+                    JSONObject recording = recordings.getJSONObject(i);
+                    Integer duration = recording.getInt("length");
+                    avg_duration += (duration - avg_duration) / (i + 1);
+                } catch (JSONException e) {
+                    // If song length isn't found for this entry, skip it
+                }
+            }
+
+            if (avg_duration > 0) {
+                tab_duration = avg_duration / 1000;
+            }
+        }
+    }
+
+    private class SongDurationErrorListener implements Response.ErrorListener {
+            @Override
+            public void onErrorResponse(VolleyError error)
+            {
+                Log.d("tabparser", "Song Duration Request Error: " + error.getMessage());
+            }
+    }
 }
