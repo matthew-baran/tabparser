@@ -39,9 +39,14 @@ public class SongList extends ListActivity
         String[] pathnames = download.list(new TabFileFilter(extensions));
 
         // TODO: Test empty list handling
-        assert (pathnames != null);
-
-        list_values = new ArrayList<>(Arrays.asList(pathnames));
+        if (pathnames != null)
+        {
+            list_values = new ArrayList<>(Arrays.asList(pathnames));
+        }
+        else
+        {
+            list_values = new ArrayList<>();
+        }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 R.layout.list_item, R.id.list_text, list_values);
