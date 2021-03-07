@@ -49,7 +49,7 @@ public class SongList extends ListActivity
         }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                R.layout.list_item, R.id.list_text, list_values);
+                R.layout.list_item, R.id.list_title, list_values);
 
         setListAdapter(adapter);
     }
