@@ -29,4 +29,8 @@
     <style name="Toolbar">
         <item name="android:background">@color/toolBarBackground</item>
     </style>
+    <style name="Toolbar.TitleStyle">
+        <item name="android:textSize">20sp</item>
+    </style>
+
 </resources>

@@ -4,12 +4,12 @@ import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import androidx.appcompat.widget.Toolbar;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class SongList extends ListActivity
+public class SongList extends AppCompatActivity
 {
     private List<String> list_values;
     public static final String MSG_FILE = "com.github.matthew.baran.tab_parser.FILE_CHOICE";
@@ -30,6 +30,9 @@ public class SongList extends ListActivity
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_songlist);
+
+        Toolbar bar = findViewById(R.id.songlist_toolbar);
+        setSupportActionBar(bar);
 
         // TODO: Add check for file read/write permissions
         File sdcard = Environment.getExternalStorageDirectory();
@@ -51,17 +54,30 @@ public class SongList extends ListActivity
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 R.layout.list_item, R.id.list_title, list_values);
 
-        setListAdapter(adapter);
+        ListView lv = findViewById(R.id.songlist);
+        lv.setAdapter(adapter);
+        lv.setOnItemClickListener(getClickListener());
     }
 
     @Override
-    protected void onListItemClick(ListView list, View view, int position, long id)
+    public boolean onCreateOptionsMenu(Menu menu)
     {
-        super.onListItemClick(list, view, position, id);
+        getMenuInflater().inflate(R.menu.menu_songlist, menu);
+        return true;
+    }
 
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(MSG_FILE, list_values.get((int) id));
-        startActivity(intent);
+    AdapterView.OnItemClickListener getClickListener()
+    {
+        return new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                Intent intent = new Intent(SongList.this, MainActivity.class);
+                intent.putExtra(MSG_FILE, list_values.get((int) id));
+                startActivity(intent);
+            }
+        };
     }
 
     public static class TabFileFilter implements FilenameFilter
