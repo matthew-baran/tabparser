@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".SongList">
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context=".SongList">
 
     <item
-        android:id="@+id/action_search"
-        android:orderInCategory="300"
-        android:title="User"
-        android:icon="@drawable/ic_search"
-        app:showAsAction="ifRoom" />
+            android:id="@+id/action_search"
+            android:orderInCategory="300"
+            android:title="User"
+            android:icon="@drawable/ic_search"
+            app:showAsAction="ifRoom"/>
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="300"
-        android:title="User"
-        android:icon="@drawable/ic_settings"
-        app:showAsAction="ifRoom" />
+            android:id="@+id/action_settings"
+            android:orderInCategory="300"
+            android:title="User"
+            android:icon="@drawable/ic_settings"
+            app:showAsAction="ifRoom"/>
 
 </menu>
