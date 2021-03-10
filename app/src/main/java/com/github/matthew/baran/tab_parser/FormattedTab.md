@@ -18,7 +18,15 @@ continuously while scrolling.
     * A blank line follows the Chorus keyword, except when the first chorus contained a blank line
 
 ### Tablature Lines
+Tablature lines provide specific notes to play for .  Those lines typically take up a larger amount
+of space in the tab than they actually take to play.  Lots of tablature lines can artificially speed-up
+or slow-down tab scrolling.  For now, tablature lines are removed to estimate scrolling time purely on
+lyrics and chord sections.  In the future, it would be cool to display tablature in a split-screen or
+overlay of some kind.
+
+* Tablature lines are identified by a large number of dashes contained in a line
 
 ### Artist and Title
-
-### Chord count
+Artist and Title information is often contained at the beginning of a tab file.  If the first lines with
+text content have the form "artist - title" or "artist" followed by blank lines then "title", those lines
+will be used to populate the artist/title information for the tab.
