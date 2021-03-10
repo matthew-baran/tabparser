@@ -19,14 +19,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class SongList extends AppCompatActivity
-{
+public class SongList extends AppCompatActivity {
     private List<String> list_values;
     public static final String MSG_FILE = "com.github.matthew.baran.tab_parser.FILE_CHOICE";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_songlist);
@@ -42,12 +40,9 @@ public class SongList extends AppCompatActivity
         String[] pathnames = download.list(new TabFileFilter(extensions));
 
         // TODO: Test empty list handling
-        if (pathnames != null)
-        {
+        if (pathnames != null) {
             list_values = new ArrayList<>(Arrays.asList(pathnames));
-        }
-        else
-        {
+        } else {
             list_values = new ArrayList<>();
         }
 
@@ -60,19 +55,15 @@ public class SongList extends AppCompatActivity
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
+    public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_songlist, menu);
         return true;
     }
 
-    AdapterView.OnItemClickListener getClickListener()
-    {
-        return new AdapterView.OnItemClickListener()
-        {
+    AdapterView.OnItemClickListener getClickListener() {
+        return new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
-            {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(SongList.this, MainActivity.class);
                 intent.putExtra(MSG_FILE, list_values.get((int) id));
                 startActivity(intent);
@@ -80,22 +71,17 @@ public class SongList extends AppCompatActivity
         };
     }
 
-    public static class TabFileFilter implements FilenameFilter
-    {
+    public static class TabFileFilter implements FilenameFilter {
         private String[] extensions;
 
-        public TabFileFilter(String[] extensions)
-        {
+        public TabFileFilter(String[] extensions) {
             this.extensions = extensions;
         }
 
         @Override
-        public boolean accept(File dir, String name)
-        {
-            for (String ext : extensions)
-            {
-                if (name.endsWith(ext))
-                {
+        public boolean accept(File dir, String name) {
+            for (String ext : extensions) {
+                if (name.endsWith(ext)) {
                     return true;
                 }
             }
