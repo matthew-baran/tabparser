@@ -68,16 +68,8 @@ class FormattedTab {
     FormattedTab(AppCompatActivity context, File file) {
         this.context = context;
 
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            String line;
-            while ((line = br.readLine()) != null) {
-                lines.add(line);
-            }
-            br.close();
-        } catch (IOException e) {
-            // TODO: Add error handling.
-            lines = null;
+        lines = readFile(file);
+        if (lines == null) {
             this.context = null;
             return;
         }
@@ -87,6 +79,22 @@ class FormattedTab {
         findChorusLocations();
         formatTab();
         setDuration();
+    }
+
+    public static ArrayList<String> readFile(File file) {
+        ArrayList<String> list = new ArrayList<String>();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line = br.readLine()) != null) {
+                list.add(line);
+            }
+            br.close();
+        } catch (IOException e) {
+            // TODO: Add error handling.
+            return null;
+        }
+        return list;
     }
 
     SpannableStringBuilder getFormattedText() {
