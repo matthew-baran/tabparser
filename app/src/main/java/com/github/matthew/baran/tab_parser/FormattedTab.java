@@ -40,28 +40,29 @@ class FormattedTab {
     private boolean extra_blank = false;
 
     // @formatter:off
-    private final Pattern chord_pattern =
+    public static final Pattern chord_pattern =
             Pattern.compile(
-                    "(?<=^|\\s)" + "[A-G][b#]?" +   // A, Bb, C#
-                            "(min|m)?" +                    // Amin, Am
-                            "\\d*" +                        // C5, B7
-                            "(?i)(dim\\d*" +                // Adim,  Gdim9
-                            "|add\\d+" +                    // Cadd9,  B7add6
-                            "|sus\\d*" +                    // Dsus, Dsus4
-                            "|aug|\\+" +                    // Eaug, E+
-                            "|(M|maj)\\d*)?" +              // Cmaj, Cmaj7
-                            "([b#]\\d+)?" +                 // Cmaj7b9, AmSus2#7
-                            "([/\\\\][A-G][b#]?)?" +         // C/E, G7\A, D/F#
-                            "(?=([:;,.]|\\s|$))");
+                "(?<=^|\\s)" + "[A-G][b#]?" +   // A, Bb, C#
+                "(min|m)?" +                    // Amin, Am
+                "\\d*" +                        // C5, B7
+                "(?i)(dim\\d*" +                // Adim,  Gdim9
+                "|add\\d+" +                    // Cadd9,  B7add6
+                "|sus\\d*" +                    // Dsus, Dsus4
+                "|aug|\\+" +                    // Eaug, E+
+                "|(M|maj)\\d*)?" +              // Cmaj, Cmaj7
+                "([b#]\\d+)?" +                 // Cmaj7b9, AmSus2#7
+                "([/\\\\][A-G][b#]?)?" +         // C/E, G7\A, D/F#
+                "(?=([:;,.]|\\s|$))");
 
-    private final Pattern anchor_pattern = Pattern.compile(
-            "(?i)(Chorus" +
-                    "|(\\w*\\s*)?Verse\\s*\\w*" +
-                    "|Bridge|Intro|Outro|Interlude" +
-                    "|Capo\\s*(I+|\\d+)|(Pre-)?chorus)(?=([:;,.]|\\s|$))");
+    public static final Pattern anchor_pattern =
+            Pattern.compile(
+                "(?i)(Chorus" +
+                "|(\\w*\\s*)?Verse\\s*\\w*" +
+                "|Bridge|Intro|Outro|Interlude" +
+                "|Capo\\s*(I+|\\d+)|(Pre-)?chorus)(?=([:;,.]|\\s|$))");
 
-    private final Pattern chorus_pattern = Pattern.compile("(?i)Chorus(?=([:;,.]|\\s|$))");
-    private final Pattern blank_pattern = Pattern.compile("^\\s*$");
+    public static final Pattern chorus_pattern = Pattern.compile("(?i)Chorus(?=([:;,.]|\\s|$))");
+    public static final Pattern blank_pattern = Pattern.compile("^\\s*$");
     // @formatter:on
 
     FormattedTab(AppCompatActivity context, File file) {
@@ -81,7 +82,7 @@ class FormattedTab {
             return;
         }
 
-        findArtistAndTitle();
+        setArtistAndTitle();
         findChorusLines();
         findChorusLocations();
         formatTab();
@@ -104,47 +105,64 @@ class FormattedTab {
         return tab_duration;
     }
 
-    private void findArtistAndTitle() {
-        Iterator<String> it = lines.iterator();
-        int ctr = 0;
+    private void setArtistAndTitle() {
+        ArtistAndTitle info = new ArtistAndTitle(lines);
+        artist = info.artist;
+        title = info.title;
+        artist_title_idx = info.artist_title_idx;
+    }
 
-        while (it.hasNext()) {
-            String str = it.next();
-            if (containsAnchor(str) || containsChords(str)) {
-                return;
-            }
-            if (!str.isEmpty()) {
-                // Recover artist/title from "artist - title" structure
-                if (str.contains("-") && str.indexOf('-') == str.lastIndexOf('-')) {
-                    String[] parsed = str.split("\\s*-\\s*");
+    public static class ArtistAndTitle {
+        String artist = "Unknown Artist";
+        String title = "Unknown Title";
+        Integer artist_title_idx = -1;
 
-                    artist = cleanString(parsed[0]);
-                    title = cleanString(parsed[1]);
-                    artist_title_idx = ctr;
+        ArtistAndTitle(ArrayList<String> file_lines) {
+            findArtistAndTitle(file_lines);
+        }
+
+        private void findArtistAndTitle(ArrayList<String> lines) {
+            Iterator<String> it = lines.iterator();
+            int ctr = 0;
+
+            while (it.hasNext()) {
+                String str = it.next();
+                if (containsAnchor(str) || containsChords(str)) {
                     return;
-                } else {
-                    // Try to recover artist/title from consecutive lines
-                    artist = cleanString(str);
-                    while (it.hasNext()) {
-                        ++ctr;
-                        str = it.next();
-                        if (!str.isEmpty()) {
-                            if (containsAnchor(str) || containsChords(str)) {
-                                artist = "Unknown Artist";
-                            } else {
-                                title = cleanString(str);
-                                artist_title_idx = ctr;
+                }
+                if (!str.isEmpty()) {
+                    // Recover artist/title from "artist - title" structure
+                    if (str.contains("-") && str.indexOf('-') == str.lastIndexOf('-')) {
+                        String[] parsed = str.split("\\s*-\\s*");
+
+                        artist = cleanString(parsed[0]);
+                        title = cleanString(parsed[1]);
+                        artist_title_idx = ctr;
+                        return;
+                    } else {
+                        // Try to recover artist/title from consecutive lines
+                        artist = cleanString(str);
+                        while (it.hasNext()) {
+                            ++ctr;
+                            str = it.next();
+                            if (!str.isEmpty()) {
+                                if (containsAnchor(str) || containsChords(str)) {
+                                    artist = "Unknown Artist";
+                                } else {
+                                    title = cleanString(str);
+                                    artist_title_idx = ctr;
+                                }
+                                return;
                             }
-                            return;
                         }
                     }
                 }
+                ++ctr;
             }
-            ++ctr;
         }
     }
 
-    private String cleanString(String str) {
+    public static String cleanString(String str) {
         // Trim whitespace and force capitalization of first letters only
         str = str.toLowerCase().trim();
 
@@ -339,15 +357,15 @@ class FormattedTab {
         return formatted_chorus;
     }
 
-    private boolean containsAnchor(String str) {
+    public static boolean containsAnchor(String str) {
         return anchor_pattern.matcher(str).find();
     }
 
-    private boolean containsChords(String str) {
+    public static boolean containsChords(String str) {
         return chord_pattern.matcher(str).find();
     }
 
-    private boolean isBlank(String str) {
+    public static boolean isBlank(String str) {
         return blank_pattern.matcher(str).find();
     }
 
