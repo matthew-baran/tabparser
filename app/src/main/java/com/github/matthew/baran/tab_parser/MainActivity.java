@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private final int MY_PERMISSIONS_REQUEST_READ_STORAGE = 0;
     private static final String LOG_NAME = "Tab Party";
 
-    private String filename;
+    private File tab_file;
     private boolean animation_cancelled = false;
     private int animation_duration = 100;
 
@@ -39,8 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
         mTopToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(mTopToolbar);
-
-        filename = getIntent().getStringExtra(SongList.MSG_FILE);
+        tab_file = (File) getIntent().getSerializableExtra(SongList.MSG_FILE);
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) ==
                 PackageManager.PERMISSION_DENIED) {
@@ -101,10 +100,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void displayTab() {
-        File sdcard = Environment.getExternalStorageDirectory();
-        File file = new File(sdcard, "Download/" + filename);
-
-        FormattedTab tab = new FormattedTab(this, file);
+        FormattedTab tab = new FormattedTab(this, tab_file);
 
         getSupportActionBar().setTitle(tab.getArtist() + " - " + tab.getTitle());
         animation_duration = tab.getTabDuration();

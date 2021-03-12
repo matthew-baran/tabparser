@@ -22,10 +22,11 @@ import java.lang.reflect.Array;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 public class SongList extends AppCompatActivity {
-    private List<String> list_values = new ArrayList<>();
+    private List<File> tab_files = new ArrayList<>();
     public static final String MSG_FILE = "com.github.matthew.baran.tab_parser.FILE_CHOICE";
 
     @Override
@@ -37,21 +38,17 @@ public class SongList extends AppCompatActivity {
         Toolbar bar = findViewById(R.id.songlist_toolbar);
         setSupportActionBar(bar);
 
-        // TODO: Add check for file read/write permissions
-        File sdcard = Environment.getExternalStorageDirectory();
-        File download = new File(sdcard, "Download");
+        // TODO: Add check for file read/write permissions (and all other app permissions since this is the entry point)
 
-        String[] extensions = {".txt", ".tab"};
-        String[] pathnames = download.list(new TabFileFilter(extensions));
-
-        // TODO: Test empty list handling
-        if (pathnames != null) {
-            list_values = new ArrayList<>(Arrays.asList(pathnames));
+        List<FormattedTab.ArtistAndTitle> list_info = getItemInfo();
+        if (list_info == null) {
+            ArrayAdapter<String> empty_adapter = new ArrayAdapter<>(this, R.layout.list_item, R.id.list_title,
+                    Arrays.asList("No Tab Files Found."));
+            ListView lv = findViewById(R.id.songlist);
+            return;
         }
 
-        TabItemAdapter adapter = new TabItemAdapter(this, getItemInfo(list_values));
-//        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-//                R.layout.list_item, R.id.list_title, list_values);
+        TabItemAdapter adapter = new TabItemAdapter(this, list_info);
 
         ListView lv = findViewById(R.id.songlist);
         lv.setAdapter(adapter);
@@ -69,17 +66,27 @@ public class SongList extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(SongList.this, MainActivity.class);
-                intent.putExtra(MSG_FILE, list_values.get((int) id));
+                intent.putExtra(MSG_FILE, tab_files.get((int) id));
                 startActivity(intent);
             }
         };
     }
 
-    private List<FormattedTab.ArtistAndTitle> getItemInfo(List<String> filenames) {
+    private List<FormattedTab.ArtistAndTitle> getItemInfo() {
+        File sdcard = Environment.getExternalStorageDirectory();
+        File download = new File(sdcard, "Download");
+
+        String[] extensions = {".txt", ".tab"};
+        String[] pathnames = download.list(new TabFileFilter(extensions));
+
+        if (pathnames == null) {
+            return null;
+        }
+
         List<FormattedTab.ArtistAndTitle> item_info = new ArrayList<>();
-        for (String fn : filenames) {
-            File sdcard = Environment.getExternalStorageDirectory();
+        for (String fn : Arrays.asList(pathnames)) {
             File filename = new File(sdcard, "Download" + File.separator + fn);
+            tab_files.add(filename);
 
             ArrayList<String> file_lines = FormattedTab.readFile(filename);
             if (file_lines == null) {
@@ -87,8 +94,12 @@ public class SongList extends AppCompatActivity {
                 continue;
             }
 
-            FormattedTab.ArtistAndTitle tmp = new FormattedTab.ArtistAndTitle(file_lines);
-            item_info.add(new FormattedTab.ArtistAndTitle(file_lines));
+            FormattedTab.ArtistAndTitle info = new FormattedTab.ArtistAndTitle(file_lines);
+            if (info.title == "Unknown Title" && info.artist == "Unknown Artist") {
+                info.title = fn;
+                info.artist = "";
+            }
+            item_info.add(info);
         }
         return item_info;
     }
